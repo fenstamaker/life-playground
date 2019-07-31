@@ -6,6 +6,7 @@ module.exports = {
   entry: {
     app: "./src/index.tsx"
   },
+  devtool: "inline-source-map",
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
@@ -37,10 +38,12 @@ module.exports = {
         }
       },
       {
+        test: /\.worker\.js$/,
+        use: { loader: "worker-loader" }
+      },
+      {
         test: /\.css$/i,
-        use: [
-          "style-loader", "css-loader"
-        ]
+        use: ["style-loader", "css-loader"]
       }
     ]
   },
