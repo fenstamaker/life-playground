@@ -10,7 +10,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      title: "rot-js test"
+      title: "life playground"
     })
   ],
   output: {
@@ -48,7 +48,7 @@ module.exports = {
     ]
   },
   devServer: {
-    contentBase: path.join(__dirname, "dist"),
+    contentBase: path.join(__dirname, "lib"),
     compress: true,
     port: 8080,
     host: "0.0.0.0"

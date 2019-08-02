@@ -1,6 +1,7 @@
 import { Layer, Tile, Map } from "./map";
 import { Camera, RenderSpace } from "./camera";
 import * as Game from "./game";
+import { Grid } from "./automata/index";
 
 export interface RenderInstruction {
   color: string;
@@ -54,23 +55,18 @@ export class Renderer {
     layer.forEach(this.renderObj.bind(this, state, renderSpace, tileSize));
   }
 
-  render(state: Game.State, tileSize: number) {
-    const renderSpace = this.camera.getRenderSpace(state.map, tileSize);
+  render(grid: Grid, cellSize: number) {
+    const renderSpace = this.camera.getRenderSpace(cellSize);
     this.ctx.clearRect(0, 0, this.camera.width, this.camera.height);
-    if (state.map.layers) {
-      state.map.layers.forEach(
-        this.renderLayer.bind(this, state, renderSpace, tileSize)
-      );
-    }
-    if (state.foods) {
-      Object.entries(state.foods).forEach(([key, value]) =>
-        this.renderObj(state, renderSpace, tileSize, value)
-      );
-    }
-    if (state.creatures) {
-      Object.entries(state.creatures).forEach(([key, value]) =>
-        this.renderObj(state, renderSpace, tileSize, value)
-      );
-    }
+    grid.forEach((column, x) =>
+      column.forEach((cell, y) => {
+        if (cell.state === "alive") {
+          const tx = (x - renderSpace.x1) * cellSize + renderSpace.offsetX;
+          const ty = (y - renderSpace.y1) * cellSize + renderSpace.offsetY;
+          this.ctx.fillStyle = "blue";
+          this.ctx.fillRect(Math.round(tx), Math.round(ty), cellSize, cellSize);
+        }
+      })
+    );
   }
 }

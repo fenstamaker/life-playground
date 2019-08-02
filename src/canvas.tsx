@@ -3,13 +3,18 @@ import * as React from "react";
 import { Renderer } from "./renderer";
 import { Camera } from "./camera";
 import * as Game from "./game";
+import { Grid } from "./automata/index";
 
 export default function Canvas({
-  state,
-  tileSize
+  grid,
+  width,
+  height,
+  cellSize
 }: {
-  state: Game.State;
-  tileSize: number;
+  grid: Grid;
+  width: number;
+  height: number;
+  cellSize: number;
 }) {
   const canvas: React.MutableRefObject<HTMLCanvasElement> = React.useRef(null);
 
@@ -18,17 +23,18 @@ export default function Canvas({
     let frameId = window.requestAnimationFrame(renderFrame);
 
     const camera = new Camera(
-      state.map,
+      width,
+      height,
       canvas.current.clientWidth,
       canvas.current.clientHeight,
-      tileSize
+      cellSize
     );
     const renderer = new Renderer(ctx, camera);
 
     function renderFrame(timestamp: number) {
       frameId = window.requestAnimationFrame(renderFrame);
       // game.tick(frameId, timestamp);
-      renderer.render(state, tileSize);
+      renderer.render(grid, cellSize);
     }
 
     return () => window.cancelAnimationFrame(frameId);
@@ -38,8 +44,8 @@ export default function Canvas({
     <canvas
       ref={canvas}
       id="canvas"
-      width={state.map.width * tileSize}
-      height={state.map.height * tileSize}
+      width={width * cellSize}
+      height={height * cellSize}
     />
   );
 }

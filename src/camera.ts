@@ -18,16 +18,22 @@ export class Camera {
   maxY: number;
   speed: number;
 
-  constructor(map: Map, width: number, height: number, tileSize: number) {
+  constructor(
+    mapWidth: number,
+    mapHeight: number,
+    width: number,
+    height: number,
+    tileSize: number
+  ) {
     this.x = 0;
     this.y = 0;
     this.width = width;
     this.height = height;
-    this.maxX = map.width * tileSize - width;
-    this.maxY = map.width * tileSize - height;
+    this.maxX = mapWidth * tileSize - width;
+    this.maxY = mapHeight * tileSize - height;
   }
 
-  getRenderSpace(map: Map, tileSize: number): RenderSpace {
+  getRenderSpace(tileSize: number): RenderSpace {
     const x1 = Math.floor(this.x / tileSize);
     const y1 = Math.floor(this.y / tileSize);
 
