@@ -1,51 +1,100 @@
 import { Map } from "./map";
 import * as React from "react";
-import { Renderer } from "./renderer";
-import { Camera } from "./camera";
+import getRenderSpace, { RenderSpace } from "./camera";
 import * as Game from "./game";
 import { Grid } from "./automata/index";
+import { render } from "./renderer";
 
-export default function Canvas({
-  grid,
-  width,
-  height,
-  cellSize
-}: {
+export interface CanvasProps {
+  canvasRef: React.MutableRefObject<HTMLCanvasElement>;
+  width: number;
+  height: number;
+  cellSize: number;
+}
+
+export interface CanvasRendererProps {
   grid: Grid;
   width: number;
   height: number;
   cellSize: number;
-}) {
-  const canvas: React.MutableRefObject<HTMLCanvasElement> = React.useRef(null);
+  onFrameRate: (frameRate: number) => void;
+}
+export class CanvasRenderer extends React.Component<CanvasRendererProps> {
+  canvas: React.MutableRefObject<HTMLCanvasElement>;
+  ctx: CanvasRenderingContext2D;
+  frameRate: number;
+  frameId: number;
+  previousDrawTime: number;
+  renderSpace: RenderSpace;
 
-  React.useEffect(() => {
-    const ctx = canvas.current.getContext("2d");
-    let frameId = window.requestAnimationFrame(renderFrame);
+  constructor(props: CanvasRendererProps) {
+    super(props);
+    this.canvas = React.createRef();
+    this.ctx = this.canvas.current
+      ? this.canvas.current.getContext("2d")
+      : null;
+    this.frameRate = 0;
+    this.frameId = window.requestAnimationFrame(this.renderFrame.bind(this));
+  }
 
-    const camera = new Camera(
-      width,
-      height,
-      canvas.current.clientWidth,
-      canvas.current.clientHeight,
-      cellSize
-    );
-    const renderer = new Renderer(ctx, camera);
-
-    function renderFrame(timestamp: number) {
-      frameId = window.requestAnimationFrame(renderFrame);
-      // game.tick(frameId, timestamp);
-      renderer.render(grid, cellSize);
+  componentDidUpdate(previousProps: CanvasRendererProps) {
+    if (!this.ctx || !this.renderSpace) {
+      this.ctx = this.canvas.current.getContext("2d");
     }
 
-    return () => window.cancelAnimationFrame(frameId);
-  });
+    this.renderSpace = getRenderSpace(
+      this.props.width,
+      this.props.height,
+      this.canvas.current.clientWidth,
+      this.canvas.current.clientHeight,
+      this.props.cellSize
+    );
+  }
 
-  return (
-    <canvas
-      ref={canvas}
-      id="canvas"
-      width={width * cellSize}
-      height={height * cellSize}
-    />
-  );
+  renderFrame(timestamp: number) {
+    this.frameId = window.requestAnimationFrame(this.renderFrame.bind(this));
+    if (this.ctx && this.renderSpace) {
+      if (this.previousDrawTime) {
+        const delta = timestamp - this.previousDrawTime;
+        this.previousDrawTime = timestamp;
+        this.frameRate = 1 / (delta / 1000);
+      } else {
+        this.previousDrawTime = timestamp;
+      }
+      this.props.onFrameRate(this.frameRate);
+
+      render(this.props.grid, this.renderSpace, this.props.cellSize, this.ctx);
+    }
+  }
+
+  render() {
+    return (
+      <Canvas
+        width={this.props.width}
+        height={this.props.height}
+        cellSize={this.props.cellSize}
+        canvasRef={this.canvas}
+      />
+    );
+  }
+}
+
+class Canvas extends React.Component<CanvasProps> {
+  shouldComponentUpdate(nextProps: CanvasProps) {
+    return (
+      this.props.width !== nextProps.width ||
+      this.props.height !== nextProps.height
+    );
+  }
+
+  render() {
+    return (
+      <canvas
+        ref={this.props.canvasRef}
+        id="canvas"
+        width={this.props.width * this.props.cellSize}
+        height={this.props.height * this.props.cellSize}
+      />
+    );
+  }
 }

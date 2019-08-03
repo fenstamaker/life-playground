@@ -3,22 +3,20 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
+  context: path.resolve(__dirname, "src"),
   entry: {
-    app: "./src/index.tsx"
+    app: "./index.tsx"
   },
-  devtool: "inline-source-map",
-  plugins: [
-    new CleanWebpackPlugin(),
-    new HtmlWebpackPlugin({
-      title: "life playground"
-    })
-  ],
+  devServer: {
+    contentBase: path.join(__dirname, "lib"),
+    compress: true,
+    port: 8080,
+    host: "0.0.0.0"
+  },
+  devtool: "eval-source-map",
   output: {
     filename: "[name].bundle.js",
     path: path.resolve(__dirname, "lib")
-  },
-  resolve: {
-    extensions: [".tsx", ".ts", ".js"]
   },
   module: {
     rules: [
@@ -47,10 +45,13 @@ module.exports = {
       }
     ]
   },
-  devServer: {
-    contentBase: path.join(__dirname, "lib"),
-    compress: true,
-    port: 8080,
-    host: "0.0.0.0"
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: "life playground"
+    })
+  ],
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"]
   }
 };

@@ -37,13 +37,6 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
 
 function diff(width: number, x: number, dx: number) {
   return (x + dx + width) % width;
-  if (x === 0 && dx < 0) {
-    return width - 1 + dx;
-  }
-  if (x === width - 1 && dx > 0) {
-    return dx;
-  }
-  return x + dx;
 }
 
 function neighbors(x: number, y: number, grid: Grid): Array<Cell> {
@@ -51,17 +44,20 @@ function neighbors(x: number, y: number, grid: Grid): Array<Cell> {
   const height = grid[0].length;
   const diffX = diff.bind(this, width);
   const diffY = diff.bind(this, height);
-
-  return [
-    grid[diffX(x, -1)][diffY(y, -1)],
-    grid[diffX(x, -1)][diffY(y, 0)],
-    grid[diffX(x, -1)][diffY(y, 1)],
-    grid[diffX(x, 0)][diffY(y, -1)],
-    grid[diffX(x, 0)][diffY(y, 1)],
-    grid[diffX(x, 1)][diffY(y, -1)],
-    grid[diffX(x, 1)][diffY(y, 0)],
-    grid[diffX(x, 1)][diffY(y, 1)]
+  const deltaCoords = [
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, -1],
+    [0, 1],
+    [1, -1],
+    [1, 0],
+    [1, 1]
   ];
+
+  return deltaCoords
+    .map(([dx, dy]) => grid[diffX(x, dx)][diffY(y, dy)])
+    .filter(x => x);
 }
 
 export function step(grid: Grid): Grid {

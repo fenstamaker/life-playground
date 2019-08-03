@@ -7,43 +7,33 @@ export interface RenderSpace {
   y2: number;
   offsetX: number;
   offsetY: number;
-}
-
-export class Camera {
-  x: number;
-  y: number;
   width: number;
   height: number;
-  maxX: number;
-  maxY: number;
-  speed: number;
+}
 
-  constructor(
-    mapWidth: number,
-    mapHeight: number,
-    width: number,
-    height: number,
-    tileSize: number
-  ) {
-    this.x = 0;
-    this.y = 0;
-    this.width = width;
-    this.height = height;
-    this.maxX = mapWidth * tileSize - width;
-    this.maxY = mapHeight * tileSize - height;
-  }
+export default function getRenderSpace(
+  mapWidth: number,
+  mapHeight: number,
+  width: number,
+  height: number,
+  tileSize: number
+): RenderSpace {
+  const x = 0;
+  const y = 0;
+  const maxX = mapWidth * tileSize - width;
+  const maxY = mapHeight * tileSize - height;
 
-  getRenderSpace(tileSize: number): RenderSpace {
-    const x1 = Math.floor(this.x / tileSize);
-    const y1 = Math.floor(this.y / tileSize);
+  const x1 = Math.floor(x / tileSize);
+  const y1 = Math.floor(y / tileSize);
 
-    return {
-      x1,
-      x2: x1 + this.width / tileSize,
-      y1,
-      y2: y1 + this.height / tileSize,
-      offsetX: -this.x + x1 * tileSize,
-      offsetY: -this.y + y1 * tileSize
-    };
-  }
+  return {
+    x1,
+    x2: x1 + width / tileSize,
+    y1,
+    y2: y1 + height / tileSize,
+    offsetX: -x + x1 * tileSize,
+    offsetY: -y + y1 * tileSize,
+    width,
+    height
+  };
 }

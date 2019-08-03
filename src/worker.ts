@@ -1,18 +1,19 @@
-import * as Game from "./game";
-import { Tile } from "./map";
+import { step, Grid } from "./automata";
 
 const ctx: Worker = self as any;
-let state: Game.State;
 
-interface Message {
-  type: "creature.execution";
-  vision?: {
-    [coords: number]: Game.Food | Game.Creature | Tile;
-  };
-  creature: Game.Creature;
-}
+let grid: Grid = null;
 
-ctx.onmessage = event => {
-  const message: Message = event.data;
-  console.log(message);
+ctx.onmessage = e => {
+  grid = e.data as Grid;
 };
+
+const update = () => {
+  if (grid) {
+    grid = step(grid);
+    ctx.postMessage(grid);
+  }
+  setTimeout(update, 500);
+};
+
+setTimeout(update, 250);
