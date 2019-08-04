@@ -79,19 +79,35 @@ function App() {
   const [aliveChance, setAliveChance] = React.useState(0.1);
   const [cellSize, setCellSize] = React.useState(6);
   const [interval, setInterval] = React.useState(100);
-  const [frameRate, setFrameRate] = React.useState(0);
+  const [frameRate, setFrameRate] = React.useState([0]);
+  const [tickRate, setTickRate] = React.useState([0]);
   const [width, setWidth] = React.useState(125);
   const [height, setHeight] = React.useState(125);
+  const [generation, setGeneration] = React.useState(1);
 
   const [grid, setGrid] = React.useState(null);
+  const [previousTickTime, setPreviousTickTime] = React.useState();
 
   const cellInput = React.useRef(cellSize);
 
   useInterval(() => {
+    const timestamp = window.performance.now();
+    if (previousTickTime) {
+      const delta = timestamp - previousTickTime;
+      setPreviousTickTime(timestamp);
+      if (tickRate.length >= 10) {
+        tickRate.shift();
+      }
+      tickRate.push(1 / (delta / 1000));
+      setTickRate(tickRate);
+    } else {
+      setPreviousTickTime(timestamp);
+    }
     setGrid(step(grid));
+    setGeneration(generation + 1);
   }, interval);
 
-  React.useEffect(() => {
+  function recalulateDimensions(cellSize: number) {
     const computedStyle = window.getComputedStyle(canvasContainer.current);
     const computedWidth =
       parseFloat(computedStyle.width) -
@@ -109,19 +125,58 @@ function App() {
     setHeight(h);
     const g = initGrid(w, h, aliveChance);
     setGrid(g);
-  }, [
+    setGeneration(1);
+  }
+
+  React.useEffect(recalulateDimensions.bind(this, cellSize), [
     (canvasContainer.current || {}).clientWidth,
-    (canvasContainer.current || {}).clientHeight
+    (canvasContainer.current || {}).clientHeight,
+    cellSize
   ]);
 
   return (
-    <div className="w-100 mw9 sans-serif bg-white">
-      <div className="cf ph3 ph5-ns pv2 flex flex-column">
+    <div className="w-100 mw9 sans-serif bg-white h-100">
+      <div className="cf ph3 ph5-ns pv2 flex flex-column h-100">
         <header className="">
           <h1 className="f2 lh-title fw9 mb3 mt0 pt3">Automata</h1>
         </header>
-        <div className="flex flex-column-reverse flex-column-reverse-m flex-row-ns">
-          <div className="outline w-25-ns w-100-m w-100 mr3 pa2">
+        <div className="flex flex-column flex-auto">
+          <div className="outline w-100 flex-auto" ref={canvasContainer}>
+            <CanvasRenderer
+              grid={grid}
+              cellSize={cellSize}
+              width={width}
+              height={height}
+              onFrameRate={fr => {
+                if (frameRate.length >= 10) {
+                  frameRate.shift();
+                }
+                frameRate.push(fr);
+                setFrameRate(frameRate);
+              }}
+            />
+          </div>
+          <div className="outline pa3 w-100 mt3">
+            <h2 className="f4 lh-title mt0 mb3">Stats</h2>
+            <div className="flex flex-row justify-around">
+              <span className="w-25 tc">
+                <strong>Generation:</strong> <br /> {generation}
+              </span>
+              <span className="w-25 tc">
+                <strong>Tick Framerate:</strong> <br />{" "}
+                {Math.ceil(tickRate.reduce((a, b) => a + b, 0)) /
+                  tickRate.length}{" "}
+                fps
+              </span>
+              <span className="w-25 tc">
+                <strong>Render Framerate:</strong> <br />{" "}
+                {Math.ceil(frameRate.reduce((a, b) => a + b, 0)) /
+                  frameRate.length}{" "}
+                fps
+              </span>
+            </div>
+          </div>
+          <div className="outline pa3 w-100 mt3">
             <h2 className="f4 lh-title mt0 mb3">Settings</h2>
             <Formik
               initialValues={{ cellSize, aliveChance, interval }}
@@ -130,8 +185,7 @@ function App() {
                 setCellSize(values.cellSize);
                 setAliveChance(values.aliveChance);
                 setInterval(values.interval);
-                const g = initGrid(width, height, aliveChance);
-                setGrid(g);
+                recalulateDimensions(values.cellSize);
               }}
               validate={values => {
                 let errors: FormikErrors<{
@@ -218,18 +272,6 @@ function App() {
                   />
                 </form>
               )}
-            />
-          </div>
-          <div
-            className="outline w-75-ns w-100 w-100-m mb3-m mb3 mb0-ns h-75 h-75-m h-100-ns"
-            ref={canvasContainer}
-          >
-            <CanvasRenderer
-              grid={grid}
-              cellSize={cellSize}
-              width={width}
-              height={height}
-              onFrameRate={setFrameRate.bind(this)}
             />
           </div>
         </div>

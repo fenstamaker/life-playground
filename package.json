@@ -22,7 +22,8 @@
     "rot-js": "^2.1.1",
     "styled-components": "^4.3.2",
     "tachyons": "^4.11.1",
-    "typescript-plugin-css-modules": "^1.2.1"
+    "typescript-plugin-css-modules": "^1.2.1",
+    "url-loader": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
