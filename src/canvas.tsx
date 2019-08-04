@@ -94,6 +94,9 @@ class Canvas extends React.Component<CanvasProps> {
         id="canvas"
         width={this.props.width * this.props.cellSize}
         height={this.props.height * this.props.cellSize}
+        style={{
+          backgroundSize: `${this.props.cellSize}px ${this.props.cellSize}px`
+        }}
       />
     );
   }

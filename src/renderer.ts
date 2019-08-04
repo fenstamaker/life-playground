@@ -19,7 +19,7 @@ export function render(
       if (cell.state === "alive") {
         const tx = (x - renderSpace.x1) * cellSize + renderSpace.offsetX;
         const ty = (y - renderSpace.y1) * cellSize + renderSpace.offsetY;
-        ctx.fillStyle = "blue";
+        ctx.fillStyle = "black";
         ctx.fillRect(Math.round(tx), Math.round(ty), cellSize, cellSize);
       }
     })

@@ -21,5 +21,20 @@
 canvas {
   margin: 0 auto;
   display: block;
-  background: lightgray;
+  background-image: linear-gradient(
+      rgba(0, 0, 0, 0.05) 0.1em,
+      transparent 0.1em
+    ),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0.1em, transparent 0.1em);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
 }
