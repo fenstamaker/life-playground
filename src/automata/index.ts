@@ -1,3 +1,4 @@
+import { getIn } from "immutable";
 export interface ProcessCellFunction {
   (neighbors: Array<Cell>): Cell;
 }
@@ -35,15 +36,24 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
   };
 }
 
-function diff(width: number, x: number, dx: number) {
-  return (x + dx + width) % width;
+function diff(width: number, wrapAround: boolean, x: number, dx: number) {
+  if (wrapAround) {
+    return (x + dx + width) % width;
+  } else {
+    return x + dx;
+  }
 }
 
-function neighbors(x: number, y: number, grid: Grid): Array<Cell> {
+function neighbors(
+  wrapAround: boolean,
+  x: number,
+  y: number,
+  grid: Grid
+): Array<Cell> {
   const width = grid.length;
   const height = grid[0].length;
-  const diffX = diff.bind(this, width);
-  const diffY = diff.bind(this, height);
+  const diffX = diff.bind(this, width, wrapAround);
+  const diffY = diff.bind(this, height, wrapAround);
   const deltaCoords = [
     [-1, -1],
     [-1, 0],
@@ -56,13 +66,18 @@ function neighbors(x: number, y: number, grid: Grid): Array<Cell> {
   ];
 
   return deltaCoords
-    .map(([dx, dy]) => grid[diffX(x, dx)][diffY(y, dy)])
+    .map(([dx, dy]) => {
+      const column = grid[diffX(x, dx)];
+      if (column) {
+        return column[diffY(y, dy)];
+      }
+    })
     .filter(x => x);
 }
 
-export function step(grid: Grid): Grid {
+export function step(wrapAround: boolean, grid: Grid): Grid {
   return grid.map((row, x) =>
-    row.map((cell, y) => stepCell(cell, neighbors(x, y, grid)))
+    row.map((cell, y) => stepCell(cell, neighbors(wrapAround, x, y, grid)))
   );
 }
 

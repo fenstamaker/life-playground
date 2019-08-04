@@ -4,10 +4,8 @@ import * as ReactDOM from "react-dom";
 import { Formik, FormikErrors, Field, FormikProps } from "formik";
 import * as NumericInput from "react-numeric-input";
 
-import * as Game from "./game";
 import { initGrid, step } from "./automata/index";
 import { CanvasRenderer } from "./canvas";
-const Worker = require("worker-loader!./worker");
 
 require("./css/index.css");
 require("tachyons");
@@ -84,6 +82,7 @@ function App() {
   const [width, setWidth] = React.useState(125);
   const [height, setHeight] = React.useState(125);
   const [generation, setGeneration] = React.useState(1);
+  const [wrapAround, setWrapAround] = React.useState(true);
 
   const [grid, setGrid] = React.useState(null);
   const [previousTickTime, setPreviousTickTime] = React.useState();
@@ -103,7 +102,7 @@ function App() {
     } else {
       setPreviousTickTime(timestamp);
     }
-    setGrid(step(grid));
+    setGrid(step(wrapAround, grid));
     setGeneration(generation + 1);
   }, interval);
 
@@ -174,17 +173,22 @@ function App() {
                   frameRate.length}{" "}
                 fps
               </span>
+              <span className="w-25 tc">
+                <strong>Wrap Around?:</strong> <br />{" "}
+                {wrapAround ? "true" : "false"}
+              </span>
             </div>
           </div>
           <div className="outline pa3 w-100 mt3">
             <h2 className="f4 lh-title mt0 mb3">Settings</h2>
             <Formik
-              initialValues={{ cellSize, aliveChance, interval }}
+              initialValues={{ cellSize, aliveChance, interval, wrapAround }}
               onSubmit={(values, actions) => {
                 console.log(values);
                 setCellSize(values.cellSize);
                 setAliveChance(values.aliveChance);
                 setInterval(values.interval);
+                setWrapAround(values.wrapAround);
                 recalulateDimensions(values.cellSize);
               }}
               validate={values => {
@@ -258,6 +262,22 @@ function App() {
                       type="number"
                       name="interval"
                       value={props.values.interval}
+                      onChange={props.handleChange}
+                      onBlur={props.handleBlur}
+                    />
+                    {props.errors.interval && (
+                      <div className="red f6 mb2">{props.errors.interval}</div>
+                    )}
+                  </div>
+                  <div className="mv3">
+                    <label className="mr2 fw6 lh-copy f6" htmlFor="wrapAround">
+                      Wrap Around?
+                    </label>
+                    <input
+                      className="lh-copy f6"
+                      type="checkbox"
+                      name="wrapAround"
+                      checked={props.values.wrapAround}
                       onChange={props.handleChange}
                       onBlur={props.handleBlur}
                     />

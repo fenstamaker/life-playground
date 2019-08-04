@@ -100,13 +100,13 @@ function Grid(props: GridProps) {
             d={`M ${cellSize} 0 L 0 0 0 ${cellSize}`}
             fill="none"
             stroke="white"
-            stroke-width="1"
+            strokeWidth="1"
           />
           <path
             d={`M ${cellSize} 0 L 0 0 0 ${cellSize}`}
             fill="none"
             stroke="lightgrey"
-            stroke-width="0.5"
+            strokeWidth="0.5"
           />
         </pattern>
         <pattern
@@ -124,7 +124,7 @@ function Grid(props: GridProps) {
             d={`M ${cellSize * 10} 0 L 0 0 0 ${cellSize * 10}`}
             fill="none"
             stroke="gray"
-            stroke-width="1"
+            strokeWidth="1"
           />
         </pattern>
       </defs>
