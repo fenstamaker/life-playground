@@ -29,6 +29,37 @@ function useInterval(callback: () => void, delay: number) {
     }
   }, [delay]);
 }
+function useBrowserInterval(
+  callback: (timestamp?: number) => void,
+  delay: number
+) {
+  const savedCallback = React.useRef<(timestamp?: number) => void>();
+  const previousTimestamp = React.useRef(window.performance.now());
+
+  // Remember the latest callback.
+  React.useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  React.useEffect(() => {
+    let frameId = 0;
+
+    function tick(timestamp: number) {
+      frameId = window.requestAnimationFrame(tick);
+      if (timestamp - previousTimestamp.current >= delay) {
+        savedCallback.current(timestamp);
+        previousTimestamp.current = timestamp;
+      }
+    }
+
+    if (delay !== null) {
+      frameId = window.requestAnimationFrame(tick);
+
+      return () => window.cancelAnimationFrame(frameId);
+    }
+  }, [delay]);
+}
 
 function useWorker(callback: (e: MessageEvent) => void, worker: Worker) {
   const savedWorker = React.useRef<Worker>();
@@ -51,17 +82,6 @@ function useWorker(callback: (e: MessageEvent) => void, worker: Worker) {
   }, [false]);
 
   return (savedWorker.current || { postMessage: (): void => null }).postMessage;
-}
-
-function Wrapper(props: any) {
-  return (
-    <div className="cf ph3 ph5-ns pv2">
-      <header className="">
-        <h1 className="f2 lh-title fw9 mb3 mt0 pt3">Automata</h1>
-      </header>
-      <div {...props} />
-    </div>
-  );
 }
 
 export interface AutomataProps {
@@ -89,7 +109,7 @@ function App() {
 
   const cellInput = React.useRef(cellSize);
 
-  useInterval(() => {
+  useBrowserInterval(() => {
     const timestamp = window.performance.now();
     if (previousTickTime) {
       const delta = timestamp - previousTickTime;
@@ -118,8 +138,8 @@ function App() {
       parseFloat(computedStyle.paddingTop) -
       parseFloat(computedStyle.paddingBottom);
 
-    const w = Math.floor(computedWidth / cellSize);
-    const h = Math.floor(computedHeight / cellSize);
+    const w = Math.ceil(computedWidth / cellSize);
+    const h = Math.ceil(computedHeight / cellSize);
     setWidth(w);
     setHeight(h);
     const g = initGrid(w, h, aliveChance);
@@ -140,7 +160,10 @@ function App() {
           <h1 className="f2 lh-title fw9 mb3 mt0 pt3">Automata</h1>
         </header>
         <div className="flex flex-column flex-auto">
-          <div className="outline w-100 flex-auto" ref={canvasContainer}>
+          <div
+            className="outline w-100 mw-100 overflow-hidden flex-auto mh-50"
+            ref={canvasContainer}
+          >
             <CanvasRenderer
               grid={grid}
               cellSize={cellSize}
@@ -156,31 +179,31 @@ function App() {
             />
           </div>
           <div className="outline pa3 w-100 mt3">
-            <h2 className="f4 lh-title mt0 mb3">Stats</h2>
+            <h2 className="lh-title mv0 mb1 mb3-ns">Stats</h2>
             <div className="flex flex-row justify-around">
-              <span className="w-25 tc">
+              <span className="tc">
                 <strong>Generation:</strong> <br /> {generation}
               </span>
-              <span className="w-25 tc">
-                <strong>Tick Framerate:</strong> <br />{" "}
+              <span className="tc">
+                <strong>Tick:</strong> <br />
                 {Math.ceil(tickRate.reduce((a, b) => a + b, 0)) /
-                  tickRate.length}{" "}
+                  tickRate.length}
                 fps
               </span>
-              <span className="w-25 tc">
-                <strong>Render Framerate:</strong> <br />{" "}
+              <span className="tc">
+                <strong>Render:</strong> <br />
                 {Math.ceil(frameRate.reduce((a, b) => a + b, 0)) /
-                  frameRate.length}{" "}
+                  frameRate.length}
                 fps
               </span>
-              <span className="w-25 tc">
-                <strong>Wrap Around?:</strong> <br />{" "}
-                {wrapAround ? "true" : "false"}
+              <span className="tc">
+                <strong>Size:</strong> <br />
+                {width} X {height}
               </span>
             </div>
           </div>
           <div className="outline pa3 w-100 mt3">
-            <h2 className="f4 lh-title mt0 mb3">Settings</h2>
+            <h2 className="lh-title mt0 mb3">Settings</h2>
             <Formik
               initialValues={{ cellSize, aliveChance, interval, wrapAround }}
               onSubmit={(values, actions) => {
@@ -214,9 +237,12 @@ function App() {
                 return errors;
               }}
               render={props => (
-                <form className="center w-100" onSubmit={props.handleSubmit}>
-                  <div className="mv3">
-                    <label className="db fw6 lh-copy f6" htmlFor="cellSize">
+                <form
+                  className="center w-100 flex flex-row justify-around"
+                  onSubmit={props.handleSubmit}
+                >
+                  <div className="tc">
+                    <label className="db fw6 lh-copy" htmlFor="cellSize">
                       Cell Size
                     </label>
                     <input
@@ -231,9 +257,9 @@ function App() {
                       <div className="red f6 mb2">{props.errors.cellSize}</div>
                     )}
                   </div>
-                  <div className="mv3">
-                    <label className="db fw6 lh-copy f6" htmlFor="aliveChance">
-                      Chance for Cell to be Alive
+                  <div className="tc">
+                    <label className="db fw6 lh-copy" htmlFor="aliveChance">
+                      Alive Chance
                     </label>
                     <input
                       className="pa2 input-reset ba bg-transparent w-100"
@@ -250,13 +276,10 @@ function App() {
                       </div>
                     )}
                   </div>
-                  <div className="mv3">
-                    <label
-                      className="db fw6 lh-copy f6"
-                      htmlFor="updateInterval"
-                    >
-                      Update Interval (milliseconds)
-                    </label>{" "}
+                  <div className="tc">
+                    <label className="db fw6 lh-copy" htmlFor="updateInterval">
+                      Interval (ms)
+                    </label>
                     <input
                       className="pa2 input-reset ba bg-transparent w-100"
                       type="number"
@@ -269,12 +292,12 @@ function App() {
                       <div className="red f6 mb2">{props.errors.interval}</div>
                     )}
                   </div>
-                  <div className="mv3">
-                    <label className="mr2 fw6 lh-copy f6" htmlFor="wrapAround">
-                      Wrap Around?
+                  <div className="tc">
+                    <label className="db fw6 lh-copy" htmlFor="wrapAround">
+                      Wrap?
                     </label>
                     <input
-                      className="lh-copy f6"
+                      className="w2"
                       type="checkbox"
                       name="wrapAround"
                       checked={props.values.wrapAround}
