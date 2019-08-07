@@ -5,7 +5,9 @@ import { Formik, FormikErrors, Field, FormikProps } from "formik";
 import * as NumericInput from "react-numeric-input";
 
 import { initGrid, step } from "./automata/index";
+import * as Life from "./automata/life";
 import { CanvasRenderer } from "./canvas";
+import produce from "immer";
 
 require("./css/index.css");
 require("tachyons");
@@ -107,8 +109,6 @@ function App() {
   const [grid, setGrid] = React.useState(null);
   const [previousTickTime, setPreviousTickTime] = React.useState();
 
-  const cellInput = React.useRef(cellSize);
-
   useBrowserInterval(() => {
     const timestamp = window.performance.now();
     if (previousTickTime) {
@@ -122,7 +122,7 @@ function App() {
     } else {
       setPreviousTickTime(timestamp);
     }
-    setGrid(step(wrapAround, grid));
+    setGrid(Life.step(wrapAround, width, height, grid));
     setGeneration(generation + 1);
   }, interval);
 
@@ -142,7 +142,7 @@ function App() {
     const h = Math.ceil(computedHeight / cellSize);
     setWidth(w);
     setHeight(h);
-    const g = initGrid(w, h, aliveChance);
+    const g = Life.initGrid(w, h, aliveChance);
     setGrid(g);
     setGeneration(1);
   }

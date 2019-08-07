@@ -10,7 +10,7 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, "lib"),
     compress: true,
-    port: 8081,
+    port: 8080,
     host: "0.0.0.0"
   },
   devtool: "eval-source-map",

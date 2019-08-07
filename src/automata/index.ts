@@ -1,83 +1,84 @@
 import { getIn } from "immutable";
+import produce from "immer";
+
 export interface ProcessCellFunction {
   (neighbors: Array<Cell>): Cell;
 }
 
 export interface Cell {
-  x: number;
-  y: number;
-  state: string;
+  alive: boolean;
 }
 
 export type Grid = Array<Array<Cell>>;
 
-export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
-  const alive = neighbors
-    .map(cell => cell.state)
-    .filter(state => state === "alive");
+export function isCell(cell: Cell | any): cell is Cell {
+  return (cell as Cell).alive !== undefined;
+}
 
-  if (self.state === "alive" && (alive.length === 2 || alive.length === 3)) {
+export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
+  const alive = neighbors.filter(cell => cell && cell.alive);
+
+  if (self.alive && (alive.length === 2 || alive.length === 3)) {
     return {
-      ...self,
-      state: "alive"
+      alive: true
     };
   }
 
-  if (self.state === "dead" && alive.length === 3) {
+  if (!self.alive && alive.length === 3) {
     return {
-      ...self,
-      state: "alive"
+      alive: true
     };
   }
 
   return {
-    ...self,
-    state: "dead"
+    alive: false
   };
 }
 
-function diff(width: number, wrapAround: boolean, x: number, dx: number) {
-  if (wrapAround) {
-    return (x + dx + width) % width;
-  } else {
-    return x + dx;
-  }
-}
+const deltaCoords = [
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1]
+];
 
 function neighbors(
-  wrapAround: boolean,
+  selectXFn: (z: number, dz: number) => number,
+  selectYFn: (z: number, dz: number) => number,
   x: number,
   y: number,
   grid: Grid
 ): Array<Cell> {
-  const width = grid.length;
-  const height = grid[0].length;
-  const diffX = diff.bind(this, width, wrapAround);
-  const diffY = diff.bind(this, height, wrapAround);
-  const deltaCoords = [
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-    [0, -1],
-    [0, 1],
-    [1, -1],
-    [1, 0],
-    [1, 1]
-  ];
-
-  return deltaCoords
-    .map(([dx, dy]) => {
-      const column = grid[diffX(x, dx)];
-      if (column) {
-        return column[diffY(y, dy)];
-      }
-    })
-    .filter(x => x);
+  return deltaCoords.map(([dx, dy]) => {
+    const x2 = selectXFn(x, dx);
+    const y2 = selectYFn(y, dy);
+    return (grid[x2] || [])[y2];
+  });
 }
 
-export function step(wrapAround: boolean, grid: Grid): Grid {
+function neighborsSelectFn(wrapAround: boolean, size: number) {
+  if (wrapAround) {
+    return (z: number, dz: number) => (z + dz + size) % size;
+  }
+  return (z: number, dz: number) => z + dz;
+}
+
+export function step(
+  wrapAround: boolean,
+  width: number,
+  height: number,
+  grid: Grid
+): Grid {
+  const neighborsX = neighborsSelectFn(wrapAround, width);
+  const neighborsY = neighborsSelectFn(wrapAround, height);
   return grid.map((row, x) =>
-    row.map((cell, y) => stepCell(cell, neighbors(wrapAround, x, y, grid)))
+    row.map((cell, y) =>
+      stepCell(cell, neighbors(neighborsX, neighborsY, x, y, grid))
+    )
   );
 }
 
@@ -92,15 +93,11 @@ export function initGrid(
     for (let y = 0; y < height; y++) {
       if (Math.random() < aliveChance) {
         grid[x][y] = {
-          x,
-          y,
-          state: "alive"
+          alive: true
         };
       } else {
         grid[x][y] = {
-          x,
-          y,
-          state: "dead"
+          alive: false
         };
       }
     }
