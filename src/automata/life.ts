@@ -3,7 +3,7 @@ import { Stats } from "fs";
 export enum Status {
   Null,
   Food,
-  Creature
+  Creature,
 }
 
 export interface Cell {
@@ -36,7 +36,7 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
     if (energy > 0 && creatures.length >= 2 && creatures.length < 4) {
       return {
         ...self,
-        energy
+        energy,
       };
     }
   }
@@ -46,7 +46,7 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
     if (energy > 0 && creatures.length === 0 && food.length < 9) {
       return {
         ...self,
-        energy
+        energy,
       };
     }
   }
@@ -55,7 +55,7 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
     if (creatures.length >= 2 && food.length >= 2) {
       return {
         status: Status.Creature,
-        energy: 3
+        energy: 3,
       };
     }
     // if (creatures.length === 3) {
@@ -67,14 +67,14 @@ export function stepCell(self: Cell, neighbors: Array<Cell>): Cell {
     if (food.length === 3) {
       return {
         status: Status.Food,
-        energy: 10
+        energy: 10,
       };
     }
   }
 
   return {
     status: Status.Null,
-    energy: 0
+    energy: 0,
   };
 }
 
@@ -86,7 +86,7 @@ const deltaCoords = [
   [0, 1],
   [1, -1],
   [1, 0],
-  [1, 1]
+  [1, 1],
 ];
 
 function neighbors(
@@ -140,17 +140,17 @@ export function initGrid(
       if (Math.random() < 0.1) {
         grid[x][y] = {
           status: Status.Creature,
-          energy: 3
+          energy: 3,
         };
       } else if (Math.random() < foodChance) {
         grid[x][y] = {
           status: Status.Food,
-          energy: 10
+          energy: 10,
         };
       } else {
         grid[x][y] = {
           status: Status.Null,
-          energy: 0
+          energy: 0,
         };
       }
     }
