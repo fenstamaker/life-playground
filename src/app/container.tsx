@@ -1,10 +1,17 @@
-import { useRef, useState, MutableRefObject, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  MutableRefObject,
+  useEffect,
+} from "react";
 import * as React from "react";
 import styled from "styled-components";
 
 import { useInterval, usePaintInterval } from "../utils";
-import { Simulator, Option, Options } from "../automata/simulator";
+import { Simulator, Option, Options, Algorithm } from "../automata/simulator";
 import { GameOfLifeSimulator } from "../automata/game-of-life";
+import { CreatureSimulator } from "../automata/creatures";
 import { Grid, Box, FlexBox } from "./components";
 import { Config } from "./components/config";
 import { Stats } from "./components/stats";
@@ -12,7 +19,9 @@ import { Canvas } from "./components/canvas";
 import getRenderSpace from "../renderer/camera";
 import { render } from "../renderer/render";
 import console = require("console");
+
 const GameOfLife = new GameOfLifeSimulator();
+const Creatures = new CreatureSimulator();
 
 function initOptions(options: Options): object {
   const state: { [propName: string]: any } = {};
@@ -56,7 +65,15 @@ const globalOptions: Options = {
 export function Container() {
   const canvasContainer = useRef(null);
   const canvas = useRef(null);
-  const simulator: MutableRefObject<Simulator> = useRef(GameOfLife);
+  const [simulator, setSimulator] = useState(Algorithm.Creatures);
+
+  function getSimulator(): Simulator {
+    if (simulator === Algorithm.Creatures) {
+      return Creatures;
+    }
+    return GameOfLife;
+  }
+
   const [renderSpace, setRenderSpace] = useState(null);
 
   // Times
@@ -71,13 +88,10 @@ export function Container() {
   const [height, setHeight] = useState(100);
 
   // Algorithms
-  const [options, setOptions] = useState(
-    initOptions(simulator.current.options)
+  const [options, setOptions] = useState(initOptions(getSimulator().options));
+  const [grid, setGrid] = useState(
+    getSimulator().initGrid(width, height, options)
   );
-  // const [grid, setGrid] = useState(
-  //   simulator.current.initGrid(width, height, options)
-  // );
-  const grid = useRef(simulator.current.initGrid(width, height, options));
 
   // Fun information
   const [generation, setGeneration] = useState(1);
@@ -98,17 +112,17 @@ export function Container() {
     } else {
       setPreviousTickTime(timestamp);
     }
-    const g = simulator.current.stepGrid(grid.current, options);
-    grid.current = g;
+    const g = getSimulator().stepGrid(grid, options);
+    setGrid(g);
     setGeneration(generation + 1);
     render(canvas.current.getContext("2d"), renderSpace, g, cellSize);
   }, tickInterval);
 
   function recalculateDimensions() {
     const [w, h] = getComputedSizes(canvasContainer.current, cellSize);
-    const g = simulator.current.initGrid(w, h, options);
+    const g = getSimulator().initGrid(w, h, options);
 
-    grid.current = g;
+    setGrid(g);
     setWidth(w);
     setHeight(h);
     setGeneration(1);
@@ -141,8 +155,29 @@ export function Container() {
   return (
     <div className="w-100 mw9 sans-serif bg-white h-100">
       <div className="cf ph3 ph5-ns pv2 flex flex-column h-100">
-        <header className="">
-          <h1 className="f2 lh-title fw9 mb3 mt0 pt3">Automata</h1>
+        <header className="dt w-100 border-box pt3 pb3">
+          <h1 className="dtc v-mid link dim w-25">Automata</h1>
+
+          <div className="dtc v-mid w-75 tr">
+            <a
+              className="link dim dark-gray f6 f5-ns dib mr3 mr4-ns"
+              onClick={() => {
+                setSimulator(Algorithm.GameOfLife);
+                setOptions(initOptions(getSimulator().options));
+                recalculateDimensions();
+              }}>
+              Game of Life
+            </a>
+            <a
+              className="link dim dark-gray f6 f5-ns dib mr3 mr4-ns"
+              onClick={() => {
+                setSimulator(Algorithm.Creatures);
+                setOptions(initOptions(getSimulator().options));
+                recalculateDimensions();
+              }}>
+              Creatures
+            </a>
+          </div>
         </header>
         <Grid>
           <FlexBox ref={canvasContainer}>
@@ -161,7 +196,7 @@ export function Container() {
             Config
             <Config
               options={{
-                ...simulator.current.options,
+                ...getSimulator().options,
                 ...globalOptions,
               }}
               values={{

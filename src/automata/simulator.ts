@@ -6,6 +6,7 @@ export enum Algorithm {
 
 export interface Cell {
   alive: boolean;
+  tag: Algorithm;
 }
 
 export type GridCells = Array<Cell>;
@@ -29,6 +30,7 @@ export interface Option {
   default: any;
   min?: any;
   max?: any;
+  step?: any;
 }
 
 export interface Options {

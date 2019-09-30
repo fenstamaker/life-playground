@@ -32,6 +32,7 @@ export class GameOfLifeSimulator implements Simulator {
       default: 0.1,
       min: 0.1,
       max: 1.0,
+      step: 0.01,
     },
   };
   readonly deltaCoords = [

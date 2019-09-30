@@ -1,10 +1,8 @@
 import { Grid, XY, Algorithm } from "../automata/simulator";
 import { RenderSpace } from "./camera";
-import getRenderSpace from "../camera";
 import { Cell } from "../automata/simulator";
 import { GameOfLifeCell } from "../automata/game-of-life";
 import { CreatureCell, CreatureStatus } from "../automata/creatures";
-import { is } from "immutable";
 
 export interface RenderInstruction {
   color: string;
@@ -39,7 +37,7 @@ export function render(
 
     if (isCreatureCell(cell)) {
       if (cell.status === CreatureStatus.Creature) {
-        ctx.fillStyle = "blue";
+        ctx.fillStyle = "purple";
       }
       if (cell.status === CreatureStatus.Food) {
         ctx.fillStyle = "green";

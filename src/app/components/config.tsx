@@ -53,6 +53,7 @@ export function Config(props: {
                   value={props.values[key]}
                   onChange={props.handleChange}
                   onBlur={props.handleBlur}
+                  step={option.step || 1}
                 />
               )}
               {option.type === "boolean" && (
