@@ -65,7 +65,7 @@ const globalOptions: Options = {
 export function Container() {
   const canvasContainer = useRef(null);
   const canvas = useRef(null);
-  const [simulator, setSimulator] = useState(Algorithm.Creatures);
+  const [simulator, setSimulator] = useState(Algorithm.GameOfLife);
 
   function getSimulator(): Simulator {
     if (simulator === Algorithm.Creatures) {
